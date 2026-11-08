@@ -1229,6 +1229,21 @@ impl<'a> TypeStruct<'a> {
                 type_id: prop.type_id.clone(),
             })
     }
+
+    /// Iterate over `(rust_name, wire_name)` for each property, where
+    /// `wire_name` is the original JSON property name (the serde rename), or
+    /// `None` if it equals the Rust name or the property is flattened.
+    /// Additive Arroyo patch: used to name Arrow fields after JSON properties.
+    pub fn properties_wire_names(&'a self) -> impl Iterator<Item = (&'a str, Option<&'a str>)> {
+        self.details.properties.iter().map(|prop| {
+            let wire = match &prop.rename {
+                type_entry::StructPropertyRename::Rename(s) => Some(s.as_str()),
+                type_entry::StructPropertyRename::None
+                | type_entry::StructPropertyRename::Flatten => None,
+            };
+            (prop.name.as_str(), wire)
+        })
+    }
 }
 
 impl TypeNewtype<'_> {
